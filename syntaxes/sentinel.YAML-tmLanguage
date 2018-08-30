@@ -1,0 +1,344 @@
+name: Sentinel
+comment: 'Sentinel Syntax'
+scopeName: source.sentinel
+uuid: 93E017CC-6F27-11D9-90EB-000D93589AF6
+
+fileTypes:
+    - sentinel
+
+firstLineMatch: '^#!.*\b(sentinel)'
+keyEquivalent: ^~J
+
+patterns:
+    -   name: meta.import.sentinel
+        begin: '(?<!\.)\b(import)(?!\s*:)\b'
+        beginCaptures:
+            '1':
+                name: keyword.control.import.sentinel
+        end: '(;)|\n|(?=//)'
+        endCaptures:
+            '1':
+                name: punctuation.terminator.statement.sentinel
+        patterns:
+            -   include: '#strings'
+            -   include: '#comments'
+            -   name: punctuation.separator.object.sentinel
+                match: ','
+
+    -   name: meta.function.sentinel
+        comment: 'Match function, optional function name and optional function arguments'
+        # begin: "\n\t\t\t\t\t(?x)\n\t\t\t\t\t(?:\n\t\t\t\t\t(?<!\\w)\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t# Ensure word boundry\n\t\t\t\t\t([\\p{L}\\p{Nl}$_][\\p{L}\\p{Nl}$\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\x{200C}\\x{200D}]*)\t# Identifier\n\t\t\t\t\t\\s*(=)\\s*\n\t\t\t\t\t)?\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t# Optional\n\t\t\t\t\t\\b(func)\n\t\t\t\t\t\n\t\t\t\t\t(?:\\s*\n\t\t\t\t\t(?<=[\\s\\*])\n\t\t\t\t\t([\\p{L}\\p{Nl}$_][\\p{L}\\p{Nl}$\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\x{200C}\\x{200D}]*)\t# Optional Name\n\t\t\t\t\t)?\n\t\t\t\t\t\\s*(\\()\n\t\t\t\t"
+        begin: "func"
+        beginCaptures:
+            '1':
+                name: meta.function.variable.sentinel
+            '2':
+                name: keyword.operator.assignment.sentinel
+            '3':
+                name: storage.type.function.sentinel
+            '4':
+                name: storage.modifier.sentinel
+            '5':
+                name: entity.name.function.sentinel
+            '6':
+                name: punctuation.definition.parameters.begin.sentinel
+        end: (\))
+        endCaptures:
+            '1':
+                name: punctuation.definition.parameters.end.sentinel
+        patterns:
+            -   include: '#function-params'
+
+    -   name: meta.method.sentinel
+        begin: "\n\t\t\t\t\t(?x)\n\t\t\t\t\t\\b\n\t\t\t\t\t(?: (static) \\s+ )?                                             # Optional static keyword\n\t\t\t\t\t(?!                                                             # Dont match known keywords\n\t\t\t\t\t(?:async|await|break|case|catch|continue|do|else|finally|for|func|if|\n\t\t\t\t\texport|import|package|return|switch|throw|try|while|with)\n\t\t\t\t\t[\\s\\(]\n\t\t\t\t\t)\n\t\t\t\t\t([\\p{L}\\p{Nl}$_][\\p{L}\\p{Nl}$\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\x{200C}\\x{200D}]*)\n\t\t\t\t\t\\s*\n\t\t\t\t\t(\\()\n\t\t\t\t\t(?=(?:[^\\(\\)]*)?\\)\\s*\\{)\n\t\t\t\t"
+        beginCaptures:
+            '1':
+                name: storage.modifier.static.sentinel
+            '2':
+                name: entity.name.function.sentinel
+            '3':
+                name: punctuation.definition.parameters.begin.sentinel
+        end: \)
+        endCaptures:
+            '0':
+                name: punctuation.definition.parameters.begin.sentinel
+        patterns:
+            -   include: '#function-params'
+
+    -   name: meta.class.sentinel
+        begin: "\n\t\t\t\t\t(?x)\n\t\t\t\t\t\\b(class)(?=\\s|$)\n\t\t\t\t\t(?:\n\t\t\t\t\t\\s+\n\t\t\t\t\t([\\p{L}\\p{Nl}$_][\\p{L}\\p{Nl}$\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\x{200C}\\x{200D}]*)\n\t\t\t\t\t)?\n\t\t\t\t\t(?:\n\t\t\t\t\t\\s+\n\t\t\t\t\t(extends)\n\t\t\t\t\t\\s+\n\t\t\t\t\t(?:\\b([\\p{L}\\p{Nl}$_][\\p{L}\\p{Nl}$\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\x{200C}\\x{200D}\\.]*)\\b(?![\\(]))?\n\t\t\t\t\t)?\n\t\t\t\t"
+        beginCaptures:
+            '1':
+                name: storage.type.class.sentinel
+            '2':
+                name: entity.name.type.class.sentinel
+            '3':
+                name: storage.modifier.sentinel
+            '4':
+                name: entity.other.inherited-class.sentinel
+        end: '\s*($|(?=\{))'
+        patterns:
+            -   include: '#function-call'
+
+    -   comment: 'Dont scope preceding whitespace as string.regex'
+        begin: '(?<=[\[=(?:+,!]|^|return|=>|&&|\|\|)\s*(?=/[^/*+?].*/)'
+        end: '(?<=[/igmuy])'
+        patterns:
+            -   name: string.regexp.sentinel
+                begin: /
+                beginCaptures:
+                    '1': {name: punctuation.definition.string.begin.sentinel}
+                end: '(/)[igmuy]*'
+                endCaptures:
+                    '1': {name: punctuation.definition.string.end.sentinel}
+                patterns:
+                    - {include: source.sentinel.regexp}
+
+    -   name: meta.ternary-if.sentinel
+        comment: 'Matching as a capture group prevents false positives with other uses of :'
+        begin: '\?'
+        beginCaptures:
+            '0':
+                name: keyword.operator.ternary.sentinel
+        end: '([^:"''`\[\]{}()]*)(:)'
+        endCaptures:
+            '1':
+                patterns:
+                    - {include: $self}
+            '2':
+                name: keyword.operator.ternary.sentinel
+        patterns:
+            -   include: $self
+
+    -   name: entity.name.function.sentinel
+        match: '(?<!\w)[\p{L}\p{Nl}$_][\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}\x{200C}\x{200D}]*(?=\s*:\s*func\b)'
+
+    -   name: entity.name.type.attribute-name.sentinel
+        match: '(?<!\w)[\p{L}\p{Nl}$_][\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}\x{200C}\x{200D}]*(?=\s*:)'
+
+    -   include: '#numbers'
+    -   include: '#strings'
+    -   include: '#comments'
+    -   include: '#operators'
+
+    -   name: keyword.control.sentinel
+        match: '(?<!\.|\$)\b(async|await|break|case|catch|continue|default|do|else|export|finally|for|if|return|switch|throw|try|while|with)\b(?!\$)'
+
+    -   name: keyword.operator.sentinel
+        match: '(?<!\.|\$)\b(as|func)\b(?!\$)'
+
+    -   name: support.class.sentinel
+        match: '(?<!\.|\$)\b(Array|Boolean|Date|Error|EvalError|Function|Map|Number|Object|Promise|Proxy|RangeError|ReferenceError|Reflect|RegExp|Set|String|SyntaxError|TypeError|URIError|WeakMap|WeakSet)\b(?!\$)'
+
+    -   name: invalid.illegal.sentinel
+        comment: 'Keywords used in an invalid context'
+        match: '(?<!\.|\$)\b(class|func|static|extends)\b(?!\$)'
+
+    -   name: constant.language.sentinel
+        match: \b(false|Infinity|NaN|null|true|undefined)\b
+        
+    -   name: punctuation.terminator.statement.sentinel
+        match: \;
+
+    -   comment: 'Allows the special return snippet to fire.'
+        captures:
+            '1':
+                name: punctuation.section.scope.begin.sentinel
+            '2':
+                name: punctuation.section.scope.end.sentinel
+        match: '(\[)(\])'
+
+    -
+        begin: '\{'
+        beginCaptures:
+            '0':
+                name: punctuation.section.scope.begin.sentinel
+        end: '\}'
+        endCaptures:
+            '0':
+                name: punctuation.section.scope.end.sentinel
+        patterns:
+            -   include: $self
+
+    -
+        begin: \(
+        beginCaptures:
+            '0':
+                name: punctuation.section.scope.begin.sentinel
+        end: \)
+        endCaptures:
+            '0':
+                name: punctuation.section.scope.end.sentinel
+        patterns:
+            -   include: $self
+
+    -   name: meta.brace.square.sentinel
+        match: '\[|\]'
+        
+repository:
+    comments:
+        patterns:
+            -   name: comment.block.documentation.sentinel
+                begin: '/\*\*(?!/|\*)'
+                beginCaptures:
+                    '0': {name: punctuation.definition.comment.begin.sentinel}
+                end: '\*/'
+                endCaptures:
+                    '0': {name: punctuation.definition.comment.end.sentinel}
+                patterns:
+                    - {match: '(?<!\w)@(abstract|access|alias|arg|argument|async|attribute|augments|author|beta|borrows|bubbes|callback|chainable|class|classdesc|code|config|const|constant|constructor|constructs|copyright|default|defaultvalue|define|deprecated|desc|description|dict|emits|enum|event|example|exports?|extends|extension|extension_for|extensionfor|external|file|fileoverview|final|fires|for|func|global|host|ignore|implements|inherit[Dd]oc|inner|instance|interface|kind|lends|license|listens|main|member|memberof|method|mixex|mixins?|module|name|namespace|nocollapse|nosideeffects|override|overview|package|param|preserve|private|prop|property|protected|public|read[Oo]nly|record|require[ds]|returns?|see|since|static|struct|submodule|summary|template|this|throws|todo|tutorial|type|typedef|unrestricted|uses|var|variation|version|virtual|writeOnce)\b', name: keyword.other.documentation.sentinel}
+
+            -   name: comment.block.sentinel
+                begin: '/\*'
+                beginCaptures:
+                    '0': {name: punctuation.definition.comment.begin.sentinel}
+                end: '\*/'
+                endCaptures:
+                    '0': {name: punctuation.definition.comment.end.sentinel}
+
+            -
+                begin: '(^[ \t]+)?(?=//)'
+                beginCaptures:
+                    '1': {name: punctuation.whitespace.comment.leading.sentinel}
+                end: '(?!\G)'
+                patterns:
+                    - {begin: //, beginCaptures: {'0': {name: punctuation.definition.comment.sentinel}}, end: \n, name: comment.line.double-slash.sentinel}
+
+    function-call:
+        patterns:
+            -   comment: 'Matches the function calls.'
+                begin: '(?<!\w)([\p{L}\p{Nl}$_][\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}\x{200C}\x{200D}]*)(\()'
+                beginCaptures:
+                    '1': {name: meta.function-call.sentinel}
+                    '2': {name: punctuation.definition.function-call.begin.sentinel}
+                end: \)
+                endCaptures:
+                    '0': {name: punctuation.definition.function-call.end.sentinel}
+                patterns:
+                    - {include: $self}
+
+    function-params:
+        patterns:
+            -   comment: 'Matches valid argument, function and variable names.  To be thorough: https://github.com/mathiasbynens/mothereff.in/tree/master/js-variables'
+                begin: '(?=[\p{L}\p{Nl}$_])|(\.\.\.)'
+                beginCaptures:
+                    '1': {name: keyword.operator.rest-parameters.sentinel}
+                end: '(?=[,)/])'
+                patterns:
+                    - {match: '\G[\p{L}\p{Nl}$_][\p{L}\p{Nl}$\p{Mn}\p{Mc}\p{Nd}\p{Pc}\x{200C}\x{200D}]*', name: variable.parameter.function.sentinel}
+                    - {include: '#function-call'}
+                    - {include: '#numbers'}
+                    - {include: '#strings'}
+                    - {include: '#comments'}
+                    - {include: '#operators'}
+                    - {match: '(?<!\.)\b(super|this)(?!\s*:)\b', name: variable.language.sentinel}
+
+            -   include: '#comments'
+                
+    numbers:
+        patterns:
+            -   name: constant.numeric.hex.sentinel
+                match: '(?<!\w|\$)0[xX]\h+\b'
+
+            -   name: constant.numeric.binary.sentinel
+                match: '(?<!\w|\$)0[bB][01]+\b'
+
+            -   name: constant.numeric.octal.sentinel
+                match: '(?<!\w|\$)0[oO][0-7]+\b'
+
+            -   name: constant.numeric.sentinel
+                match: "\n\t\t\t\t\t\t\t(?x)\n\t\t\t\t\t\t\t(?<!\\w|\\$)\t\t\t\t\t\t\t    # Ensure word boundry\n\t\t\t\t\t\t\t[+-]?                                   # Optional sign\n\t\t\t\t\t\t\t(?>\n\t\t\t\t\t\t\t(\n\t\t\t\t\t\t\t(0|[1-9][0-9]*)(\\.[0-9]*)?\t\t# 0 or 1 or 1. or 1.0\n\t\t\t\t\t\t\t| \\.[0-9]+\t\t\t\t\t\t# .1\n\t\t\t\t\t\t\t)\n\t\t\t\t\t\t\t([eE][+-]?[0-9]+)?\t\t\t\t\t# Exponent\n\t\t\t\t\t\t\t)\n\t\t\t\t\t\t\t(?!\\w)\t\t\t\t\t\t\t\t\t# Ensure word boundry\n\t\t\t\t\t\t"
+    
+    operators:
+        patterns:
+            -   name: keyword.operator.assignment.compound.sentinel
+                match: '%=|\+=|\-=|\*=|(?<!\()/='
+
+            -   name: keyword.operator.assignment.compound.bitwise.sentinel
+                match: '&=|\^=|<<=|>>=|>>>=|\|='
+
+            -   name: keyword.operator.comparison.sentinel
+                match: '!==|!=|<=|>=|===|==|<|>'
+
+            -   name: keyword.operator.logical.sentinel
+                match: '&&|!|\|\|'
+
+            -   name: keyword.operator.bitwise.sentinel
+                match: '&|\||\^|~'
+
+            -   name: keyword.operator.sentinel
+                match: '\:'
+
+            -   name: keyword.operator.logical.sentinel
+                match: '!'
+
+            -   name: keyword.operator.assignment.sentinel
+                match: '=|\:'
+
+            -   name: keyword.operator.decrement.sentinel
+                match: \-\-
+
+            -   name: keyword.operator.increment.sentinel
+                match: \+\+
+
+            -   name: keyword.operator.arithmetic.sentinel
+                match: '%|\*|/|\-|\+'
+
+            -   name: keyword.operator.spread.sentinel
+                match: \.\.\.
+
+    strings:
+        patterns:
+            -   name: string.quoted.single.sentinel
+                begin: ''''
+                beginCaptures:
+                    '0': {name: punctuation.definition.string.begin.sentinel}
+                end: ''''
+                endCaptures:
+                    '0': {name: punctuation.definition.string.end.sentinel}
+                patterns:
+                    - {include: '#escapes'}
+                    - {match: \\\n, name: constant.character.escape.newline.sentinel}
+                    - {match: \n, name: invalid.illegal.character-not-allowed-here.sentinel}
+
+            -   name: string.quoted.double.sentinel
+                begin: '"'
+                beginCaptures:
+                    '0': {name: punctuation.definition.string.begin.sentinel}
+                end: '"'
+                endCaptures:
+                    '0': {name: punctuation.definition.string.end.sentinel}
+                patterns:
+                    - {include: '#escapes'}
+                    - {match: \\\n, name: constant.character.escape.newline.sentinel}
+                    - {match: \n, name: invalid.illegal.character-not-allowed-here.sentinel}
+
+            -   name: string.quoted.other.template.sentinel
+                begin: '`'
+                beginCaptures:
+                    '0': {name: punctuation.definition.string.begin.sentinel}
+                end: '`'
+                endCaptures:
+                    '0': {name: punctuation.definition.string.end.sentinel}
+                patterns:
+                    - {include: '#escapes'}
+                    - {include: '#interpolation'}
+
+        repository:
+            escapes:
+                name: constant.character.escape.sentinel
+                match: '\\(x\h{2}|[0-2][0-7]{0,2}|3[0-6][0-7]|37[0-7]?|[4-7][0-7]?|.)'
+                
+            interpolation:
+                name: meta.embedded.line.sentinel
+                begin: '\$\{'
+                beginCaptures:
+                    '0': {name: punctuation.section.embedded.begin.sentinel}
+                contentName: source.sentinel
+                end: '(\})'
+                endCaptures:
+                    '0': {name: punctuation.section.embedded.end.sentinel}
+                    '1': {name: source.sentinel}
+                patterns:
+                    - {begin: '\{', beginCaptures: {'0': {name: meta.brace.curly.sentinel}}, end: '\}', endCaptures: {'0': {name: meta.brace.curly.sentinel}}, patterns: [{include: $self}]}
+                    - {include: $self}
