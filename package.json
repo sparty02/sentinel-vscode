@@ -1,26 +1,39 @@
 {
-    "name": "sentinel",
-    "displayName": "sentinel",
-    "description": "Syntax highlighting for Hashicorp's Sentinel",
-    "version": "0.0.1",
-    "publisher": "sparty02",
-    "engines": {
-        "vscode": "^1.26.0"
-    },
-    "categories": [
-        "Programming Languages"
+  "name": "sentinel-vscode",
+  "displayName": "sentinel",
+  "description": "Syntax highlighting for Hashicorp's Sentinel",
+  "version": "0.0.1",
+  "publisher": "sparty02",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sparty02/sentinel-vscode.git"
+  },
+  "engines": {
+    "vscode": "^1.26.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "sentinel",
+        "aliases": [
+          "Sentinel",
+          "sentinel"
+        ],
+        "extensions": [
+          ".sentinel"
+        ],
+        "configuration": "./language-configuration.json"
+      }
     ],
-    "contributes": {
-        "languages": [{
-            "id": "sentinel",
-            "aliases": ["Sentinel", "sentinel"],
-            "extensions": [".sentinel"],
-            "configuration": "./language-configuration.json"
-        }],
-        "grammars": [{
-            "language": "sentinel",
-            "scopeName": "source.sentinel",
-            "path": "./syntaxes/sentinel.tmLanguage"
-        }]
-    }
+    "grammars": [
+      {
+        "language": "sentinel",
+        "scopeName": "source.sentinel",
+        "path": "./syntaxes/sentinel.tmLanguage"
+      }
+    ]
+  }
 }
